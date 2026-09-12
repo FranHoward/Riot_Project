@@ -5,6 +5,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "TimerManager.h"
 #include "Engine/World.h"
+#include "LootDropComponent.h"
 
 ACombatDamageableBox::ACombatDamageableBox()
 {
@@ -12,6 +13,8 @@ ACombatDamageableBox::ACombatDamageableBox()
 
 	// create the mesh
 	RootComponent = Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
+
+	LootDropComponent = CreateDefaultSubobject<ULootDropComponent>(TEXT("LootDrop"));
 
 	// set the collision properties
 	Mesh->SetCollisionProfileName(FName("BlockAllDynamic"));
@@ -66,6 +69,9 @@ void ACombatDamageableBox::HandleDeath()
 
 	// call the BP handler to play effects, etc.
 	OnBoxDestroyed();
+
+	// drop the configured contents through the shared pickup pool
+	LootDropComponent->DropLoot();
 
 	// set up the death cleanup timer
 	GetWorld()->GetTimerManager().SetTimer(DeathTimer, this, &ACombatDamageableBox::RemoveFromLevel, DeathDelayTime);

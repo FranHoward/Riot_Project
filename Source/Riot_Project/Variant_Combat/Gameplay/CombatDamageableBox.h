@@ -7,6 +7,8 @@
 #include "CombatDamageable.h"
 #include "CombatDamageableBox.generated.h"
 
+class ULootDropComponent;
+
 /**
  *  A simple physics box that reacts to damage through the ICombatDamageable interface
  */
@@ -18,6 +20,10 @@ class ACombatDamageableBox : public AActor, public ICombatDamageable
 	/** Damageable box mesh */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* Mesh;
+
+	/** Can also be used by a chest Blueprint by calling Drop Loot from its open event. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<ULootDropComponent> LootDropComponent;
 
 public:	
 

@@ -11,6 +11,7 @@
 #include "TimerManager.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Animation/AnimInstance.h"
+#include "LootDropComponent.h"
 
 ACombatEnemy::ACombatEnemy()
 {
@@ -31,6 +32,8 @@ ACombatEnemy::ACombatEnemy()
 	// create the life bar
 	LifeBar = CreateDefaultSubobject<UWidgetComponent>(TEXT("LifeBar"));
 	LifeBar->SetupAttachment(RootComponent);
+
+	LootDropComponent = CreateDefaultSubobject<ULootDropComponent>(TEXT("LootDrop"));
 
 	// set the collision capsule size
 	GetCapsuleComponent()->SetCapsuleSize(35.0f, 90.0f);
@@ -242,6 +245,9 @@ void ACombatEnemy::HandleDeath()
 
 	// enable full ragdoll physics
 	GetMesh()->SetSimulatePhysics(true);
+
+	// acquire the configured item drops from the shared pickup pool
+	LootDropComponent->DropLoot();
 
 	// call the died delegate to notify any subscribers
 	OnEnemyDied.Broadcast();

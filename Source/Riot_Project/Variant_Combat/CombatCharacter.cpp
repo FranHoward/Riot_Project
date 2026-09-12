@@ -16,6 +16,8 @@
 #include "Engine/LocalPlayer.h"
 #include "CombatPlayerController.h"
 
+DEFINE_LOG_CATEGORY(LogCombatCharacter);
+
 ACombatCharacter::ACombatCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -422,7 +424,68 @@ void ACombatCharacter::HandleDeath()
 
 void ACombatCharacter::ApplyHealing(float Healing, AActor* Healer)
 {
-	// stub
+	if (Healing <= 0.0f || CurrentHP <= 0.0f)
+	{
+		return;
+	}
+
+	CurrentHP = FMath::Clamp(CurrentHP + Healing, 0.0f, MaxHP);
+	if (LifeBarWidget)
+	{
+		LifeBarWidget->SetLifePercentage(CurrentHP / MaxHP);
+	}
+}
+
+bool ACombatCharacter::ReceiveItem_Implementation(const FItemData& ItemData, AActor* SourceActor)
+{
+	if (CurrentHP <= 0.0f)
+	{
+		return false;
+	}
+
+	const float PreviousHP = CurrentHP;
+	const float PreviousDamage = MeleeDamage;
+	const int32 PreviousCurrency = Currency;
+
+	switch (ItemData.Type)
+	{
+	case EItemType::Consumable:
+		if (ItemData.Value <= 0 || CurrentHP >= MaxHP)
+		{
+			return false;
+		}
+		ApplyHealing(static_cast<float>(ItemData.Value), SourceActor);
+		break;
+
+	case EItemType::Weapon:
+		if (ItemData.Value <= 0)
+		{
+			return false;
+		}
+		MeleeDamage += static_cast<float>(ItemData.Value);
+		break;
+
+	case EItemType::Currency:
+		if (ItemData.Value <= 0)
+		{
+			return false;
+		}
+		Currency += ItemData.Value;
+		break;
+
+	default:
+		return false;
+	}
+
+	UE_LOG(LogCombatCharacter, Log,
+		TEXT("Applied item '%s': HP %.1f -> %.1f, Damage %.1f -> %.1f, Currency %d -> %d"),
+		*ItemData.DisplayName.ToString(),
+		PreviousHP, CurrentHP,
+		PreviousDamage, MeleeDamage,
+		PreviousCurrency, Currency);
+
+	OnItemEffectApplied(ItemData);
+	return true;
 }
 
 void ACombatCharacter::NotifyDanger(const FVector& DangerLocation, AActor* DangerSource)

@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "CombatAttacker.h"
 #include "CombatDamageable.h"
+#include "ItemReceiver.h"
 #include "Animation/AnimInstance.h"
 #include "CombatCharacter.generated.h"
 
@@ -27,7 +28,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogCombatCharacter, Log, All);
  *  - Respawning
  */
 UCLASS(abstract)
-class ACombatCharacter : public ACharacter, public ICombatAttacker, public ICombatDamageable
+class ACombatCharacter : public ACharacter, public ICombatAttacker, public ICombatDamageable, public IItemReceiver
 {
 	GENERATED_BODY()
 
@@ -120,8 +121,12 @@ protected:
 	float DangerTraceRadius = 100.0f;
 
 	/** Amount of damage a melee attack will deal */
-	UPROPERTY(EditAnywhere, Category="Melee Attack|Damage", meta = (ClampMin = 0, ClampMax = 100))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Melee Attack|Damage", meta = (ClampMin = 0, ClampMax = 100))
 	float MeleeDamage = 1.0f;
+
+	/** Currency collected through data-driven pickups. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Items")
+	int32 Currency = 0;
 
 	/** Amount of knockback impulse a melee attack will apply */
 	UPROPERTY(EditAnywhere, Category="Melee Attack|Damage", meta = (ClampMin = 0, ClampMax = 1000, Units = "cm/s"))
@@ -289,6 +294,12 @@ public:
 
 	// ~end CombatDamageable interface
 
+	// ~begin ItemReceiver interface
+
+	virtual bool ReceiveItem_Implementation(const FItemData& ItemData, AActor* SourceActor) override;
+
+	// ~end ItemReceiver interface
+
 	/** Called from the respawn timer to destroy and re-create the character */
 	void RespawnCharacter();
 
@@ -310,6 +321,10 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, Category="Combat")
 	void ReceivedDamage(float Damage, const FVector& ImpactPoint, const FVector& DamageDirection);
 
+	/** Blueprint hook for UI or additional feedback after an item effect succeeds. */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Items")
+	void OnItemEffectApplied(const FItemData& ItemData);
+
 protected:
 
 	/** Initialization */
@@ -325,6 +340,14 @@ protected:
 	virtual void NotifyControllerChanged() override;
 
 public:
+	UFUNCTION(BlueprintPure, Category = "Items")
+	float GetCurrentHealth() const { return CurrentHP; }
+
+	UFUNCTION(BlueprintPure, Category = "Items")
+	float GetAttackDamage() const { return MeleeDamage; }
+
+	UFUNCTION(BlueprintPure, Category = "Items")
+	int32 GetCurrency() const { return Currency; }
 
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }

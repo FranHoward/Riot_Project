@@ -17,6 +17,7 @@ public class Riot_Project : ModuleRules
 			"AIModule",
 			"StateTreeModule",
 			"GameplayStateTreeModule",
+			"Niagara",
 			"UMG",
 			"Slate"
 		});

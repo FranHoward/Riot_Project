@@ -13,6 +13,7 @@
 class UWidgetComponent;
 class UCombatLifeBar;
 class UAnimMontage;
+class ULootDropComponent;
 
 /** Completed attack animation delegate for StateTree */
 DECLARE_DELEGATE(FOnEnemyAttackCompleted);
@@ -35,6 +36,10 @@ class ACombatEnemy : public ACharacter, public ICombatAttacker, public ICombatDa
 	/** Life bar widget component */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UWidgetComponent* LifeBar;
+
+	/** Data-driven loot spawned through the shared pickup pool on death. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<ULootDropComponent> LootDropComponent;
 
 public:
 	
